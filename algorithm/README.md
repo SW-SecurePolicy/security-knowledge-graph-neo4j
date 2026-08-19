@@ -60,11 +60,22 @@ python algorithm/sbert_prototype.py
 
 `algorithm/.env` 경로는 스크립트 위치를 기준으로 찾기 때문에 저장소 루트에서 실행해도 안정적으로 동작합니다. SBERT 모델은 최초 실행 시 다운로드될 수 있으므로 인터넷 연결이 필요할 수 있습니다.
 
-프롬프트가 나타나면 테스트할 Control 문장을 입력합니다.
+실행하면 다음 메뉴가 나타납니다.
+
+```text
+=== SBERT Category 추천 메뉴 ===
+1. 새로운 Control 문장 검사
+2. Neo4j에 Control 항목 추가 (미구현)
+0. 프로그램 종료
+```
+
+`1`을 선택하고 테스트할 Control 문장을 입력합니다.
 
 ```text
 사용자의 시스템 접근 권한은 업무 수행에 필요한 최소한의 범위로 부여하고 정기적으로 검토한다.
 ```
+
+추천 결과가 출력된 후 메뉴가 다시 나타나므로 프로그램을 다시 실행하지 않고 다른 문장을 계속 검사할 수 있습니다. `2`는 향후 Neo4j 저장 기능을 위한 메뉴 항목만 표시하며 실제 데이터 추가는 수행하지 않습니다. 종료하려면 `0`을 선택합니다.
 
 ## 5. 결과 해석
 
@@ -93,4 +104,4 @@ python algorithm/sbert_prototype.py
 
 ## 현재 범위
 
-현재는 `새 Control 입력 → SBERT 임베딩 → 전체 Category와 Cosine Similarity 비교 → Top-3 추천`만 구현합니다. Neo4j 데이터 저장, `BELONGS_TO`/`RELATED_TO` 관계 생성, Accuracy 평가, 248개 Control 일괄 테스트, 웹 UI와 그래프 시각화는 포함하지 않습니다.
+현재는 `메뉴에서 검사 선택 → 새 Control 입력 → SBERT 임베딩 → 전체 Category와 Cosine Similarity 비교 → Top-3 추천 → 메뉴로 복귀`만 구현합니다. Neo4j 데이터 저장 메뉴는 화면에만 표시되며, Control 저장, `BELONGS_TO`/`RELATED_TO` 관계 생성, Accuracy 평가, 248개 Control 일괄 테스트, 웹 UI와 그래프 시각화는 포함하지 않습니다.

@@ -22,6 +22,9 @@ REQUIRED_ENV_VARS = (
     "NEO4J_PASSWORD",
     "NEO4J_DATABASE",
 )
+RECOMMEND_OPTION = "1"
+SAVE_OPTION = "2"
+EXIT_OPTION = "0"
 
 CATEGORY_QUERY = """
 MATCH (d:Domain)-[:HAS_CATEGORY]->(c:Category)
@@ -104,7 +107,11 @@ def _read_categories(transaction: Any) -> list[Category]:
             "category_id": record["category_id"],
             "category_name": record["category_name"],
         }
-        missing = [key for key, value in values.items() if value is None or not str(value).strip()]
+        missing = [
+            key
+            for key, value in values.items()
+            if value is None or not str(value).strip()
+        ]
         if missing:
             raise CategoryDataError(
                 "Category 조회 결과에 비어 있는 필드가 있습니다: " + ", ".join(missing)
@@ -182,6 +189,25 @@ def read_control_text() -> str | None:
         print("입력 문장이 비어 있습니다. Control 문장을 다시 입력해주세요.")
 
 
+def read_menu_choice() -> str | None:
+    """Display the prototype menu and return a valid user choice."""
+    while True:
+        print("\n=== SBERT Category 추천 메뉴 ===")
+        print("1. 새로운 Control 문장 검사")
+        print("2. Neo4j에 Control 항목 추가 (미구현)")
+        print("0. 프로그램 종료")
+
+        try:
+            choice = input("메뉴를 선택하세요: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n입력이 취소되어 프로그램을 종료합니다.")
+            return None
+
+        if choice in {RECOMMEND_OPTION, SAVE_OPTION, EXIT_OPTION}:
+            return choice
+        print("0, 1, 2 중 하나를 입력해주세요.")
+
+
 def print_recommendations(
     control_text: str,
     recommendations: Sequence[Recommendation],
@@ -203,38 +229,55 @@ def main() -> int:
         print(f"설정 오류: {error}", file=sys.stderr)
         return 1
 
-    control_text = read_control_text()
-    if control_text is None:
-        return 0
+    model: SentenceTransformer | None = None
 
-    try:
-        categories = fetch_categories(config)
-    except CategoryDataError as error:
-        print(f"데이터 오류: {error}", file=sys.stderr)
-        return 1
-    except (DriverError, Neo4jError) as error:
-        print(
-            "Neo4j 연결 또는 조회에 실패했습니다. Neo4j가 실행 중인지와 "
-            "algorithm/.env의 URI, 계정, 비밀번호, 데이터베이스 이름을 확인해주세요.\n"
-            f"상세 오류: {error}",
-            file=sys.stderr,
-        )
-        return 1
+    while True:
+        choice = read_menu_choice()
+        if choice is None or choice == EXIT_OPTION:
+            print("프로그램을 종료합니다.")
+            return 0
 
-    try:
-        model = SentenceTransformer(MODEL_NAME)
-        recommendations = recommend_categories(control_text, categories, model)
-    except Exception as error:
-        print(
-            "SBERT 모델을 불러오거나 유사도를 계산하지 못했습니다. "
-            "패키지 설치 상태와 인터넷 연결(최초 모델 다운로드 시 필요)을 확인해주세요.\n"
-            f"상세 오류: {error}",
-            file=sys.stderr,
-        )
-        return 1
+        if choice == SAVE_OPTION:
+            print(
+                "Neo4j Control 항목 추가 기능은 현재 프로토타입에서 "
+                "구현되지 않았습니다."
+            )
+            continue
 
-    print_recommendations(control_text, recommendations)
-    return 0
+        control_text = read_control_text()
+        if control_text is None:
+            return 0
+
+        try:
+            categories = fetch_categories(config)
+        except CategoryDataError as error:
+            print(f"데이터 오류: {error}", file=sys.stderr)
+            return 1
+        except (DriverError, Neo4jError) as error:
+            print(
+                "Neo4j 연결 또는 조회에 실패했습니다. Neo4j가 실행 중인지와 "
+                "algorithm/.env의 URI, 계정, 비밀번호, 데이터베이스 이름을 "
+                "확인해주세요.\n"
+                f"상세 오류: {error}",
+                file=sys.stderr,
+            )
+            return 1
+
+        try:
+            if model is None:
+                model = SentenceTransformer(MODEL_NAME)
+            recommendations = recommend_categories(control_text, categories, model)
+        except Exception as error:
+            print(
+                "SBERT 모델을 불러오거나 유사도를 계산하지 못했습니다. "
+                "패키지 설치 상태와 인터넷 연결(최초 모델 다운로드 시 필요)을 "
+                "확인해주세요.\n"
+                f"상세 오류: {error}",
+                file=sys.stderr,
+            )
+            return 1
+
+        print_recommendations(control_text, recommendations)
 
 
 if __name__ == "__main__":
