@@ -113,9 +113,9 @@ CASP-033 ── BELONGS_TO ──> IAM-03
 CASP-033 ── RELATED_TO ──> IAM-04
 ```
 
-## 8. 자동 Mapping 연구 확장
+## 8. SBERT Category 추천 프로토타입
 
-향후 알고리즘은 **SBERT + Cosine Similarity** 단독 방식으로 확장합니다.
+새로운 보안 Control 문장을 입력하면 Neo4j의 67개 Category와 의미 유사도를 비교해 가장 유사한 Category Top-3를 추천하는 프로토타입을 구현했습니다.
 
 기본 흐름:
 
@@ -129,13 +129,12 @@ SBERT
 67개 Category와 Cosine Similarity 계산
     ↓
 가장 유사한 Category 추천
-    ↓
-기존 수동 Mapping과 비교
-    ↓
-Accuracy 평가
 ```
 
-현재 저장소에는 알고리즘의 설계 방향만 `algorithm/README.md`에 정리했으며, 실제 SBERT 코드는 실험 단계에서 추가할 예정입니다.
+다국어 Sentence Transformers 모델과 Cosine Similarity를 사용하며, Neo4j 데이터는 조회만 하고 변경하지 않습니다.
+
+- 빠른 실행 안내: [`algorithm/README.md`](algorithm/README.md)
+- 상세 실행 및 동작 방식: [`docs/sbert_prototype.md`](docs/sbert_prototype.md)
 
 ## 9. 주의
 
